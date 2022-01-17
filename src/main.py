@@ -1,3 +1,5 @@
+"""The main script for training the model."""
+
 from arima_model import ARIMA
 import torch
 import numpy as np

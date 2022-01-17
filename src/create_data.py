@@ -1,3 +1,4 @@
+"""A script to generate offline data for training."""
 from arima_model import ARIMA
 import numpy as np
 

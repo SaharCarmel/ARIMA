@@ -1,5 +1,6 @@
-import torch
+""" The ARIMA model. """
 
+import torch
 import numpy as np
 
 
@@ -74,6 +75,13 @@ class ARIMA(torch.nn.Module):
             trainData: torch.Tensor,
             epochs: int,
             learningRate: float) -> None:
+        """fit A function to fit the model. It is a wrapper of the
+
+        Args:
+            trainData (torch.Tensor): The training data.
+            epochs (int): The number of epochs.
+            learningRate (float): The learning rate.
+        """
         dataLength = len(trainData)
         errors = torch.tensor(np.random.normal(
             loc=0, scale=1, size=dataLength), dtype=torch.float32)
