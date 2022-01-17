@@ -1,11 +1,11 @@
 import unittest
-from src.test import capitalize_name
+from src.arima_model import ARIMA
 
 
-class TestSum(unittest.TestCase):
-    def test_captilize(self):
-        string = "hello"
-        self.assertEqual(capitalize_name(string), string.capitalize())
+class TestArima(unittest.TestCase):
+    def test_init(self):
+        model = ARIMA(p=1, d=0, q=0)
+        self.assertEqual(len(model.pWeights), 2)
 
 
 if __name__ == '__main__':
