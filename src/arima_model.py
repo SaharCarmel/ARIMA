@@ -22,3 +22,9 @@ class ARIMA(torch.nn.Module):
         self.pWeights = torch.rand(p+1)
         self.pWeights.requires_grad = True
         pass
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        relevantPastData = x[-self.p:]
+        relevantPastData = torch.cat((relevantPastData, torch.tensor([1])))
+        sample = torch.matmul(relevantPastData, self.pWeights)
+        return sample
