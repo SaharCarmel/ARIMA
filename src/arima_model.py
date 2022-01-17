@@ -38,3 +38,36 @@ class ARIMA(torch.nn.Module):
                 sample[i+1] = self.forward(sample[:i+1]) + noise[i+1]
                 pass
         return sample
+
+if __name__ == '__main__':
+    datamodel = ARIMA(p=1, d=0, q=0)
+    data = torch.rand(10)
+    sampleSize = 1000
+    sampleData = datamodel.generateSample(sampleSize)
+    predictionModel = ARIMA(p=1, d=0, q=0)
+    epochs = 100
+    learningRate = 0.02
+    for epoch in range(epochs):
+        prediction = torch.zeros(sampleSize)
+        for i in range(sampleSize-1):
+            prediction[i+1] = predictionModel.forward(sampleData[0:i+1])
+            pass
+        loss = torch.mean(torch.pow(sampleData - prediction, 2))
+        print(f'Epoch {epoch} Loss {loss}')
+        loss.backward()
+
+        predictionModel.pWeights.data = predictionModel.pWeights.data - \
+            learningRate * predictionModel.pWeights.grad.data
+        predictionModel.pWeights.grad.data.zero_()
+        pass
+    print(predictionModel.pWeights)
+    print(datamodel.pWeights)
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=torch.arange(sampleSize), y=sampleData,
+                             mode='lines',
+                             name='sampleData'))
+    fig.add_trace(go.Scatter(x=torch.arange(sampleSize), y=prediction.detach().numpy(),
+                             mode='lines+markers',
+                             name='predicted'))
+    fig.show()
+    pass
