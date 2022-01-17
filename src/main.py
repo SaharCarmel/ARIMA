@@ -5,7 +5,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 
-trainSize = 140
+trainSize = 14
 sampleData = torch.tensor(np.load('data.npy'))
 sampleSize = len(sampleData)
 trainData = sampleData[:trainSize]
@@ -15,6 +15,8 @@ predictionModel.fit(trainData, epochs=100, learningRate=0.01)
 
 testData = sampleData[trainSize:]
 inference = torch.zeros(sampleSize)
+inference[0] = trainData[-2]
+inference[1] = trainData[-1]
 errors = torch.tensor(np.random.normal(
     loc=0, scale=1, size=sampleSize), dtype=torch.float32)
 with torch.no_grad():
