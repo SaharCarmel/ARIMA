@@ -28,3 +28,13 @@ class ARIMA(torch.nn.Module):
         relevantPastData = torch.cat((relevantPastData, torch.tensor([1])))
         sample = torch.matmul(relevantPastData, self.pWeights)
         return sample
+
+    def generateSample(self, length: int) -> torch.Tensor:
+        sample = torch.zeros(length)
+        noise = torch.FloatTensor(length).uniform_(-1, 1)
+        sample[0] = noise[0]
+        with torch.no_grad():
+            for i in range(length-1):
+                sample[i+1] = self.forward(sample[:i+1]) + noise[i+1]
+                pass
+        return sample
