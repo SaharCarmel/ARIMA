@@ -54,6 +54,14 @@ class ARIMA(torch.nn.Module):
         return aPred
 
     def generateSample(self, length: int) -> torch.Tensor:
+        """generateSample An helper function to generate a sample of data.
+
+        Args:
+            length (int): The length of the sample.
+
+        Returns:
+            torch.Tensor: The generated sample.
+        """
         sample = torch.zeros(length)
         noise = torch.tensor(np.random.normal(
             loc=0, scale=1, size=length), dtype=torch.float32)
