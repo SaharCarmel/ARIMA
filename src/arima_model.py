@@ -2,6 +2,7 @@ from importlib.metadata import requires
 import torch
 import plotly.express as px
 import plotly.graph_objects as go
+import numpy as np
 
 
 class ARIMA(torch.nn.Module):
@@ -24,31 +25,25 @@ class ARIMA(torch.nn.Module):
         """
         super(ARIMA, self).__init__()
         self.p = p
-        self.pWeights = torch.rand(p+1)
+        self.pWeights = torch.rand(p)
         self.pWeights.requires_grad = True
         self.q = q
-        self.qWeights = torch.rand(q+1)
+        self.qWeights = torch.rand(q)
         self.qWeights.requires_grad = True
         pass
 
     def forward(self, x: torch.Tensor, err: torch.Tensor) -> torch.Tensor:
-        relevantPastData = x[-self.p:]
-        relevantPastData = torch.cat((relevantPastData, torch.tensor([1])))
-        relevantErrors = x[-self.q:]
-        relevantErrors = torch.cat((relevantErrors, torch.tensor([1])))
-        sample = torch.matmul(relevantPastData, self.pWeights) + \
-            torch.matmul(relevantErrors, self.qWeights)
+        sample = self.pWeights*x[-1] + self.qWeights*err[-2] + err[-1]
         return sample
 
     def generateSample(self, length: int) -> torch.Tensor:
         sample = torch.zeros(length)
-        errors = torch.zeros(length)
-        noise = torch.FloatTensor(length).uniform_(-1, 1)
+        noise = torch.tensor(np.random.normal(
+            loc=0, scale=1, size=sampleSize), dtype=torch.float32)
         sample[0] = noise[0]
         with torch.no_grad():
             for i in range(length-1):
-                sample[i+1] = self.forward(sample[:i+1], errors) + noise[i+1]
-                errors[i+1] = sample[i+1] - sample[i]
+                sample[i+1] = self.forward(sample[:i+1], noise[:i+2])
                 pass
         return sample
 
@@ -59,18 +54,20 @@ class ARIMA(torch.nn.Module):
 if __name__ == '__main__':
     datamodel = ARIMA(p=1, d=0, q=1)
     data = torch.rand(10)
-    sampleSize = 30
+    sampleSize = 20
+    trainSize = 14
     sampleData = datamodel.generateSample(sampleSize)
     predictionModel = ARIMA(p=1, d=0, q=1)
-    epochs = 100
-    learningRate = 0.001
+    epochs = 10
+    learningRate = 0.005
+    errors = torch.tensor(np.random.normal(
+        loc=0, scale=1, size=sampleSize), dtype=torch.float32)
     for epoch in range(epochs):
         prediction = torch.zeros(sampleSize)
         errors = torch.zeros(sampleSize)
-        for i in range(sampleSize-1):
+        for i in range(trainSize):
             prediction[i +
-                       1] = predictionModel.forward(sampleData[0:i+1], errors[0:i+1])
-            errors[i+1] = prediction[i+1] - sampleData[i+1]
+                       1] = predictionModel.forward(sampleData[0:i+1], errors[0:i+2])
             pass
         loss = torch.mean(torch.pow(sampleData - prediction, 2))
         print(f'Epoch {epoch} Loss {loss}')
@@ -82,11 +79,23 @@ if __name__ == '__main__':
         pass
     print(predictionModel.pWeights)
     print(datamodel.pWeights)
+
+    print(predictionModel.qWeights)
+    print(datamodel.qWeights)
+    inference = torch.zeros(sampleSize-trainSize)
+    with torch.no_grad():
+        for i in range(sampleSize - trainSize):
+            inference[i] = predictionModel.forward(
+                sampleData[0:i+1], errors[0:i+2])
+
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=torch.arange(sampleSize), y=sampleData,
                              mode='lines',
                              name='sampleData'))
-    fig.add_trace(go.Scatter(x=torch.arange(sampleSize), y=prediction.detach().numpy(),
+    fig.add_trace(go.Scatter(x=torch.arange(trainSize-1), y=prediction[1:].detach().numpy(),
+                             mode='lines+markers',
+                             name='overfit'))
+    fig.add_trace(go.Scatter(x=(torch.arange(sampleSize-trainSize)+trainSize-2), y=inference.detach().numpy(),
                              mode='lines+markers',
                              name='predicted'))
     fig.show()
