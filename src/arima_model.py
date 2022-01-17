@@ -54,12 +54,12 @@ class ARIMA(torch.nn.Module):
 if __name__ == '__main__':
     datamodel = ARIMA(p=1, d=0, q=1)
     data = torch.rand(10)
-    sampleSize = 20
-    trainSize = 14
+    sampleSize = 200
+    trainSize = 140
     sampleData = datamodel.generateSample(sampleSize)
     predictionModel = ARIMA(p=1, d=0, q=1)
-    epochs = 10
-    learningRate = 0.005
+    epochs = 100
+    learningRate = 0.001
     errors = torch.tensor(np.random.normal(
         loc=0, scale=1, size=sampleSize), dtype=torch.float32)
     for epoch in range(epochs):
@@ -76,6 +76,10 @@ if __name__ == '__main__':
         predictionModel.pWeights.data = predictionModel.pWeights.data - \
             learningRate * predictionModel.pWeights.grad.data
         predictionModel.pWeights.grad.data.zero_()
+
+        predictionModel.qWeights.data = predictionModel.qWeights.data - \
+            learningRate * predictionModel.qWeights.grad.data
+        predictionModel.qWeights.grad.data.zero_()
         pass
     print(predictionModel.pWeights)
     print(datamodel.pWeights)
