@@ -37,26 +37,35 @@ class ARIMA(torch.nn.Module):
 
     def generateSample(self, length: int) -> torch.Tensor:
         sample = torch.zeros(length)
+        errors = torch.zeros(length)
         noise = torch.FloatTensor(length).uniform_(-1, 1)
         sample[0] = noise[0]
         with torch.no_grad():
             for i in range(length-1):
-                sample[i+1] = self.forward(sample[:i+1]) + noise[i+1]
+                sample[i+1] = self.forward(sample[:i+1], errors) + noise[i+1]
+                errors[i+1] = sample[i+1] - sample[i]
                 pass
         return sample
 
+    def fit(self):
+        pass
+
+
 if __name__ == '__main__':
-    datamodel = ARIMA(p=1, d=0, q=0)
+    datamodel = ARIMA(p=1, d=0, q=1)
     data = torch.rand(10)
-    sampleSize = 1000
+    sampleSize = 30
     sampleData = datamodel.generateSample(sampleSize)
-    predictionModel = ARIMA(p=1, d=0, q=0)
+    predictionModel = ARIMA(p=1, d=0, q=1)
     epochs = 100
-    learningRate = 0.02
+    learningRate = 0.001
     for epoch in range(epochs):
         prediction = torch.zeros(sampleSize)
+        errors = torch.zeros(sampleSize)
         for i in range(sampleSize-1):
-            prediction[i+1] = predictionModel.forward(sampleData[0:i+1])
+            prediction[i +
+                       1] = predictionModel.forward(sampleData[0:i+1], errors[0:i+1])
+            errors[i+1] = prediction[i+1] - sampleData[i+1]
             pass
         loss = torch.mean(torch.pow(sampleData - prediction, 2))
         print(f'Epoch {epoch} Loss {loss}')
