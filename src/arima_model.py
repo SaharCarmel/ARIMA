@@ -30,11 +30,16 @@ class ARIMA(torch.nn.Module):
         self.q = q
         self.qWeights = torch.rand(q)
         self.qWeights.requires_grad = True
+        self.d = d
+        self.dWeights = torch.rand(d)
+        self.dWeights.requires_grad = True
         pass
 
     def forward(self, x: torch.Tensor, err: torch.Tensor) -> torch.Tensor:
-        sample = self.pWeights*x[-1] + self.qWeights*err[-2] + err[-1]
-        return sample
+        zData = torch.diff(x)
+        zPred = self.dWeights*zData[-1] + self.qWeights*err[-2] + err[-1]
+        aPred = zPred + x[-1]
+        return aPred
 
     def generateSample(self, length: int) -> torch.Tensor:
         sample = torch.zeros(length)
@@ -42,8 +47,8 @@ class ARIMA(torch.nn.Module):
             loc=0, scale=1, size=sampleSize), dtype=torch.float32)
         sample[0] = noise[0]
         with torch.no_grad():
-            for i in range(length-1):
-                sample[i+1] = self.forward(sample[:i+1], noise[:i+2])
+            for i in range(length-2):
+                sample[i+2] = self.forward(sample[:i+2], noise[:i+2])
                 pass
         return sample
 
@@ -52,12 +57,12 @@ class ARIMA(torch.nn.Module):
 
 
 if __name__ == '__main__':
-    datamodel = ARIMA(p=1, d=0, q=1)
+    datamodel = ARIMA(p=1, d=1, q=1)
     data = torch.rand(10)
-    sampleSize = 200
-    trainSize = 140
+    sampleSize = 100
+    trainSize = 70
     sampleData = datamodel.generateSample(sampleSize)
-    predictionModel = ARIMA(p=1, d=0, q=1)
+    predictionModel = ARIMA(p=1, d=1, q=1)
     epochs = 100
     learningRate = 0.001
     errors = torch.tensor(np.random.normal(
@@ -65,17 +70,17 @@ if __name__ == '__main__':
     for epoch in range(epochs):
         prediction = torch.zeros(sampleSize)
         errors = torch.zeros(sampleSize)
-        for i in range(trainSize):
+        for i in range(trainSize-1):
             prediction[i +
-                       1] = predictionModel.forward(sampleData[0:i+1], errors[0:i+2])
+                       2] = predictionModel.forward(sampleData[0:i+2], errors[0:i+2])
             pass
-        loss = torch.mean(torch.pow(sampleData - prediction, 2))
+        loss = torch.sum(torch.pow(sampleData - prediction, 2))
         print(f'Epoch {epoch} Loss {loss}')
         loss.backward()
 
-        predictionModel.pWeights.data = predictionModel.pWeights.data - \
-            learningRate * predictionModel.pWeights.grad.data
-        predictionModel.pWeights.grad.data.zero_()
+        predictionModel.dWeights.data = predictionModel.dWeights.data - \
+            learningRate * predictionModel.dWeights.grad.data
+        predictionModel.dWeights.grad.data.zero_()
 
         predictionModel.qWeights.data = predictionModel.qWeights.data - \
             learningRate * predictionModel.qWeights.grad.data
@@ -88,9 +93,9 @@ if __name__ == '__main__':
     print(datamodel.qWeights)
     inference = torch.zeros(sampleSize-trainSize)
     with torch.no_grad():
-        for i in range(sampleSize - trainSize):
-            inference[i] = predictionModel.forward(
-                sampleData[0:i+1], errors[0:i+2])
+        for i in range(sampleSize - trainSize-1):
+            inference[i+1] = predictionModel.forward(
+                sampleData[0:i+2], errors[0:i+2])
 
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=torch.arange(sampleSize), y=sampleData,
