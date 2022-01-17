@@ -26,10 +26,13 @@ class ARIMA(torch.nn.Module):
         self.qWeights.requires_grad = True
         pass
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, err: torch.Tensor) -> torch.Tensor:
         relevantPastData = x[-self.p:]
         relevantPastData = torch.cat((relevantPastData, torch.tensor([1])))
-        sample = torch.matmul(relevantPastData, self.pWeights)
+        relevantErrors = x[-self.q:]
+        relevantErrors = torch.cat((relevantErrors, torch.tensor([1])))
+        sample = torch.matmul(relevantPastData, self.pWeights) + \
+            torch.matmul(relevantErrors, self.qWeights)
         return sample
 
     def generateSample(self, length: int) -> torch.Tensor:
