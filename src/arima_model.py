@@ -37,6 +37,16 @@ class ARIMA(torch.nn.Module):
         pass
 
     def forward(self, x: torch.Tensor, err: torch.Tensor) -> torch.Tensor:
+        """forward the function that defines the ARIMA(0,1,1) model.
+        It was written specifically for the case of ARIMA(0,1,1).
+
+        Args:
+            x (torch.Tensor): The input data. All the past observations
+            err (torch.Tensor): The error term. A normal distribution vector.
+
+        Returns:
+            torch.Tensor: The output of the model. The current prediction.
+        """
         zData = torch.diff(x)
         zPred = self.dWeights*zData[-1] + \
             self.qWeights*err[-2] + err[-1] + self.drift
