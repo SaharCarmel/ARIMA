@@ -10,7 +10,7 @@ class TestArima(unittest.TestCase):
     def test_fit(self):
         testModel = ARIMA(p=0, d=1, q=1)
         sampleData = testModel.generateSample(200)
-        fitModel = testModel.fit(sampleData, epochs=100, learningRate=0.01)
+        testModel.fit(sampleData, epochs=100, learningRate=0.01)
 
 
 if __name__ == '__main__':
