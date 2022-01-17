@@ -13,7 +13,7 @@ class ARIMA(torch.nn.Module):
                  p: int = 0,
                  d: int = 0,
                  q: int = 0) -> None:
-        """__init__ [summary]
+        """__init__ General ARIMA model constructor.
 
         Args:
             p (int): The number of lag observations included in the model,
@@ -33,11 +33,13 @@ class ARIMA(torch.nn.Module):
         self.d = d
         self.dWeights = torch.rand(d)
         self.dWeights.requires_grad = True
+        self.drift = torch.rand(1)
         pass
 
     def forward(self, x: torch.Tensor, err: torch.Tensor) -> torch.Tensor:
         zData = torch.diff(x)
-        zPred = self.dWeights*zData[-1] + self.qWeights*err[-2] + err[-1]
+        zPred = self.dWeights*zData[-1] + \
+            self.qWeights*err[-2] + err[-1] + self.drift
         aPred = zPred + x[-1]
         return aPred
 
