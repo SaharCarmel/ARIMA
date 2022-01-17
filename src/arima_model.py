@@ -1,5 +1,3 @@
-from importlib.metadata import requires
-from random import seed
 import torch
 
 import numpy as np
@@ -72,7 +70,10 @@ class ARIMA(torch.nn.Module):
                 pass
         return sample
 
-    def fit(self, trainData: torch.Tensor, epochs: int, learningRate: float) -> None:
+    def fit(self,
+            trainData: torch.Tensor,
+            epochs: int,
+            learningRate: float) -> None:
         dataLength = len(trainData)
         errors = torch.tensor(np.random.normal(
             loc=0, scale=1, size=dataLength), dtype=torch.float32)

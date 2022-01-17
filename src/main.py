@@ -1,7 +1,6 @@
 from arima_model import ARIMA
 import torch
 import numpy as np
-import plotly.express as px
 import plotly.graph_objects as go
 
 
@@ -28,10 +27,8 @@ fig = go.Figure()
 fig.add_trace(go.Scatter(x=torch.arange(sampleSize), y=sampleData,
                          mode='lines',
                          name='sampleData'))
-# fig.add_trace(go.Scatter(x=torch.arange(trainSize), y=inference[0:trainSize].detach().numpy(),
-#                          mode='lines+markers',
-#                          name='overfit'))
-fig.add_trace(go.Scatter(x=torch.arange(len(testData))+trainSize, y=inference.detach().numpy(),
+fig.add_trace(go.Scatter(x=torch.arange(len(testData))+trainSize,
+                         y=inference.detach().numpy(),
                          mode='lines+markers',
                          name='predicted'))
 fig.show()
