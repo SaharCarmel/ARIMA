@@ -21,6 +21,9 @@ class ARIMA(torch.nn.Module):
         self.p = p
         self.pWeights = torch.rand(p+1)
         self.pWeights.requires_grad = True
+        self.q = q
+        self.qWeights = torch.rand(q+1)
+        self.qWeights.requires_grad = True
         pass
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
