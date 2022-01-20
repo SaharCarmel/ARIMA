@@ -26,6 +26,9 @@ class ARIMA(torch.nn.Module):
         self.alpha.requires_grad = True
         self.drift = torch.rand(1)
         self.drift.requires_grad = True
+        self.weights = {"alpha": self.alpha,
+                        "drift": self.drift}
+
         pass
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -69,6 +72,9 @@ class ARIMA(torch.nn.Module):
             epochs (int): The number of epochs.
             learningRate (float): The learning rate.
         """
+        self.optimizer = torch.optim.SGD(
+            self.weights.values(), lr=learningRate)
+        self.optimizer.zero_grad()
         dataLength = len(trainData)
         for epoch in range(epochs):
             prediction = torch.rand(dataLength)
@@ -79,13 +85,13 @@ class ARIMA(torch.nn.Module):
             loss = torch.mean(torch.pow(trainData - prediction, 2))
             print(f'Epoch {epoch} Loss {loss}')
             loss.backward()
+            self.optimizer.step()
+            # self.alpha.data = self.alpha.data - \
+            #     learningRate * self.alpha.grad.data
+            # self.alpha.grad.data.zero_()
 
-            self.alpha.data = self.alpha.data - \
-                learningRate * self.alpha.grad.data
-            self.alpha.grad.data.zero_()
-
-            self.drift.data = self.drift.data - \
-                learningRate * self.drift.grad.data
-            self.drift.grad.data.zero_()
+            # self.drift.data = self.drift.data - \
+            #     learningRate * self.drift.grad.data
+            # self.drift.grad.data.zero_()
 
     pass
