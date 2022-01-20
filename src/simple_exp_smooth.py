@@ -64,7 +64,8 @@ class ARIMA(torch.nn.Module):
     def fit(self,
             trainData: torch.Tensor,
             epochs: int,
-            learningRate: float) -> None:
+            learningRate: float,
+            wandb) -> None:
         """fit A function to fit the model. It is a wrapper of the
 
         Args:
@@ -85,6 +86,7 @@ class ARIMA(torch.nn.Module):
             loss = torch.mean(torch.pow(trainData - prediction, 2))
             print(f'Epoch {epoch} Loss {loss}')
             loss.backward()
+            wandb.log({"loss": loss})
             self.optimizer.step()
             # self.alpha.data = self.alpha.data - \
             #     learningRate * self.alpha.grad.data

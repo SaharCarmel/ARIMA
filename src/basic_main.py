@@ -4,15 +4,25 @@ from simple_exp_smooth import ARIMA
 import torch
 import numpy as np
 import plotly.graph_objects as go
+import wandb
 
+config = {"lr": 0.01,
+          "epochs": 100,
+          "trainSize": 140, }
 
-trainSize = 14
+wandb.init(project="arima_model", config=config)
+config = wandb.config
+trainSize = config["trainSize"]
 sampleData = torch.tensor(np.load('data.npy'))
 sampleSize = len(sampleData)
 trainData = sampleData[:trainSize]
 
 predictionModel = ARIMA(alpha=1)
-predictionModel.fit(trainData, epochs=300, learningRate=0.01)
+wandb.watch(predictionModel)
+
+predictionModel.fit(
+    trainData, epochs=config["epochs"], learningRate=config["lr"], wandb=wandb)
+
 
 testData = sampleData[trainSize:]
 inference = torch.zeros(sampleSize)
@@ -31,4 +41,5 @@ fig.add_trace(go.Scatter(x=torch.arange(len(testData))+trainSize,
                          y=inference.detach().numpy(),
                          mode='lines+markers',
                          name='predicted'))
-fig.show()
+wandb.log({"Prediction Plot": fig})
+# fig.show()
